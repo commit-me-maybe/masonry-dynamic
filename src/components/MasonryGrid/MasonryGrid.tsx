@@ -1,13 +1,16 @@
 import React from 'react';
+import useFetchPhotos from '../../hooks/useFetchPhotos';
 
-interface MasonryGridProps {
-  children?: React.ReactNode;
-}
+const MasonryGrid: React.FC = () => {
+  const { photos } = useFetchPhotos();
 
-const MasonryGrid: React.FC<MasonryGridProps> = ({ children }) => {
   return (
     // TODO: Implement masonry grid
-    <div className="masonry-grid">{children}</div>
+    <div className="masonry-grid">
+      {photos.map((photo) => (
+        <img key={photo.id} src={photo.src.medium} alt={photo.photographer} />
+      ))}
+    </div>
   );
 };
 
