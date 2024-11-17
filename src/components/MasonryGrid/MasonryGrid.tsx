@@ -12,6 +12,12 @@ const Grid = styled.div`
   height: 100vh;
 `;
 
+const Photo = styled.img<{ width: number; height: number }>`
+  width: 100%;
+  height: auto;
+  aspect-ratio: ${(props) => props.width / props.height};
+`;
+
 const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
   const { state } = useFetchPhotos(columnCount);
 
@@ -23,12 +29,13 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
           style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
           {column.map((photo: any) => (
-            <img
+            <Photo
               key={photo.id}
-              style={{ width: '100%' }}
               loading="lazy"
               src={photo.src.medium}
               alt={photo.photographer}
+              width={photo.width}
+              height={photo.height}
             />
           ))}
         </div>

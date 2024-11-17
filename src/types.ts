@@ -1,4 +1,5 @@
 export interface Photo {
+  width: number;
   id: number;
   src: {
     medium: string;
