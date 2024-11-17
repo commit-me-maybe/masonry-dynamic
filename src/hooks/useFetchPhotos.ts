@@ -1,51 +1,77 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { produce } from 'immer';
 import { fetchPhotos } from '../api/pexelsApi';
+import { Photo } from '../types';
 
-interface Photo {
-  id: number;
-  width: number;
-  height: number;
-  url: string;
-  photographer: string;
-  src: {
-    original: string;
-    large: string;
-    medium: string;
-    small: string;
-  };
+interface MasonryState {
+  columns: Photo[][];
+  columnHeights: number[];
+  isLoading: boolean;
 }
 
-const useFetchPhotos = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const useFetchPhotos = (columnCount: number) => {
+  const [state, setState] = useState<MasonryState>(() => ({
+    columns: Array.from({ length: columnCount }, () => []),
+    columnHeights: new Array(columnCount).fill(0),
+    isLoading: false,
+  }));
+
+  const page = useRef(1);
+  const loading = useRef(false);
+
+  const loadMorePhotos = useCallback(async () => {
+    if (loading.current) return;
+    loading.current = true;
+
+    try {
+      const newPhotos = await fetchPhotos(page.current, 50);
+
+      const newColumns = [...state.columns.map((column) => [...column])];
+      const newColumnHeights = [...state.columnHeights];
+
+      newPhotos?.forEach((photo: Photo) => {
+        const shortestColumnIndex = newColumnHeights.indexOf(
+          Math.min(...newColumnHeights)
+        );
+
+        newColumns[shortestColumnIndex].push(photo);
+        newColumnHeights[shortestColumnIndex] += photo.height;
+      });
+
+      const newState = produce(state, (draft) => {
+        draft.columns = newColumns;
+        draft.columnHeights = newColumnHeights;
+      });
+
+      setState(newState);
+      page.current += 1;
+    } finally {
+      loading.current = false;
+    }
+  }, [state]);
 
   useEffect(() => {
-    const loadPhotos = async () => {
-      setLoading(true);
-      try {
-        const newPhotos = await fetchPhotos(page, 30);
-        if (newPhotos) {
-          setPhotos((prevPhotos) => [...prevPhotos, ...newPhotos]);
-          setError(null);
-        }
-      } catch (err) {
-        setError('Failed to fetch photos');
-        console.error(err);
-      } finally {
-        setLoading(false);
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading.current) {
+        loadMorePhotos();
       }
     };
 
-    loadPhotos();
-  }, [page]);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadMorePhotos]);
 
-  const loadMore = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
+  // Load initial photos
+  useEffect(() => {
+    loadMorePhotos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return { photos, loading, error, loadMore };
+  return { state, loadMorePhotos };
 };
 
 export default useFetchPhotos;

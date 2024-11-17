@@ -1,25 +1,13 @@
+import { Photo } from '../types';
+import debounce from 'lodash/debounce';
+
 const API_KEY = process.env.REACT_APP_PEXELS_API_KEY;
 const BASE_URL = 'https://api.pexels.com/v1/';
 
-const throttle = <T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): ((...args: Parameters<T>) => Promise<ReturnType<T>>) => {
-  let inThrottle: boolean = false;
-  let lastResult: ReturnType<T>;
-
-  return async (...args: Parameters<T>): Promise<ReturnType<T>> => {
-    if (!inThrottle) {
-      inThrottle = true;
-      lastResult = await func(...args);
-      setTimeout(() => (inThrottle = false), limit);
-    }
-    return lastResult;
-  };
-};
-
-// Throttle to prevent too many requests
-const throttledFetchPhotos = throttle(async (page: number, perPage: number) => {
+const fetchPhotosBase = async (
+  page: number,
+  perPage: number
+): Promise<Photo[]> => {
   try {
     const response = await fetch(
       `${BASE_URL}curated?page=${page}&per_page=${perPage}`,
@@ -38,7 +26,10 @@ const throttledFetchPhotos = throttle(async (page: number, perPage: number) => {
     return data.photos;
   } catch (error) {
     console.error('Error fetching photos:', error);
+    return [];
   }
-}, 1000);
+};
 
-export const fetchPhotos = throttledFetchPhotos;
+const debouncedFetchPhotos = debounce(fetchPhotosBase, 300, { leading: true });
+
+export const fetchPhotos = debouncedFetchPhotos;
