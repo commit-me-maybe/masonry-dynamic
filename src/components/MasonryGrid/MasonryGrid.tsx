@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import useFetchPhotos from '../../hooks/useFetchPhotos';
 import { Link } from 'react-router-dom';
+import SearchBar from '../SearchBar/SearchBar';
 
 interface MasonryGridProps {
   columnCount: number;
@@ -20,34 +21,37 @@ const Photo = styled.img<{ width: number; height: number }>`
 `;
 
 const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
-  const { state } = useFetchPhotos(columnCount);
+  const { state, handleSearch } = useFetchPhotos(columnCount);
 
   return (
-    <Grid id="masonry-grid">
-      {state.columns.map((column: any, columnIndex: number) => (
-        <div
-          key={columnIndex}
-          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-        >
-          {column.map((photo: any) => (
-            <Link
-              to={`/photo-details/${photo.id}`}
-              key={photo.id}
-              state={{ photo }}
-            >
-              <Photo
+    <>
+      <SearchBar onSearch={handleSearch} />
+      <Grid id="masonry-grid">
+        {state.columns.map((column: any, columnIndex: number) => (
+          <div
+            key={columnIndex}
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+          >
+            {column.map((photo: any) => (
+              <Link
+                to={`/photo-details/${photo.id}`}
                 key={photo.id}
-                loading="lazy"
-                src={photo.src.medium}
-                alt={photo.photographer}
-                width={photo.width}
-                height={photo.height}
-              />
-            </Link>
-          ))}
-        </div>
-      ))}
-    </Grid>
+                state={{ photo }}
+              >
+                <Photo
+                  key={photo.id}
+                  loading="lazy"
+                  src={photo.src.medium}
+                  alt={photo.photographer}
+                  width={photo.width}
+                  height={photo.height}
+                />
+              </Link>
+            ))}
+          </div>
+        ))}
+      </Grid>
+    </>
   );
 };
 

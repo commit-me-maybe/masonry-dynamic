@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { produce } from 'immer';
-import { fetchPhotos } from '../api/pexelsApi';
+import { fetchPhotos, searchPhotos } from '../api/pexelsApi';
 import { Photo } from '../types';
 
 interface MasonryState {
@@ -10,6 +10,7 @@ interface MasonryState {
 }
 
 const useFetchPhotos = (columnCount: number) => {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [state, setState] = useState<MasonryState>(() => ({
     columns: Array.from({ length: columnCount }, () => []),
     columnHeights: new Array(columnCount).fill(0),
@@ -24,7 +25,9 @@ const useFetchPhotos = (columnCount: number) => {
     loading.current = true;
 
     try {
-      const newPhotos = await fetchPhotos(page.current, 50);
+      const newPhotos = searchQuery
+        ? await searchPhotos(searchQuery)
+        : await fetchPhotos(page.current, 50);
 
       const newColumns = [...state.columns.map((column) => [...column])];
       const newColumnHeights = [...state.columnHeights];
@@ -48,7 +51,44 @@ const useFetchPhotos = (columnCount: number) => {
     } finally {
       loading.current = false;
     }
-  }, [state]);
+  }, [state, searchQuery]);
+
+  const handleSearch = useCallback(
+    async (query: string) => {
+      setSearchQuery(query);
+      page.current = 1;
+      setState({
+        columns: Array.from({ length: columnCount }, () => []),
+        columnHeights: new Array(columnCount).fill(0),
+        isLoading: false,
+      });
+
+      if (query) {
+        const searchResults = await searchPhotos(query);
+        if (searchResults) {
+          const newColumns = Array.from({ length: columnCount }, () => []);
+          const newColumnHeights = new Array(columnCount).fill(0);
+
+          searchResults.forEach((photo: Photo) => {
+            const shortestColumnIndex = newColumnHeights.indexOf(
+              Math.min(...newColumnHeights)
+            );
+            newColumns[shortestColumnIndex].push(photo as never);
+            newColumnHeights[shortestColumnIndex] += photo.height;
+          });
+
+          setState({
+            columns: newColumns,
+            columnHeights: newColumnHeights,
+            isLoading: false,
+          });
+        }
+      } else {
+        loadMorePhotos();
+      }
+    },
+    [columnCount, loadMorePhotos]
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,7 +111,7 @@ const useFetchPhotos = (columnCount: number) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, loadMorePhotos };
+  return { state, loadMorePhotos, handleSearch };
 };
 
 export default useFetchPhotos;

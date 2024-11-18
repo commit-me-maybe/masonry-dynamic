@@ -48,3 +48,26 @@ export const fetchPhotoById = async (id: string) => {
     return null;
   }
 };
+
+export const searchPhotos = async (query: string, perPage: number = 40) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}search?query=${encodeURIComponent(
+        query
+      )}&per_page=${perPage}`,
+      {
+        headers: {
+          Authorization: `${API_KEY}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.photos;
+  } catch (error) {
+    console.error('Error searching photos:', error);
+    return null;
+  }
+};
