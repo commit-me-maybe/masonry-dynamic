@@ -1,6 +1,6 @@
 export const calculateColumnCount = (width: number) => {
-  const extraMargin = 60;
+  const extraMargin = 32;
   const columnWidth = 200;
-
-  return Math.floor((width - extraMargin) / columnWidth);
+  const count = Math.floor((width - extraMargin) / columnWidth);
+  return Math.max(1, count);
 };

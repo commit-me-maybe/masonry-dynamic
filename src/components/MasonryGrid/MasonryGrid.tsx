@@ -7,11 +7,11 @@ interface MasonryGridProps {
   columnCount: number;
 }
 
-const Grid = styled.div`
+const Grid = styled.div<{ $columnCount: number }>`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(${(props) => props.$columnCount}, 1fr);
   gap: 16px;
-  height: 100vh;
+  min-height: 100vh;
 `;
 
 const Photo = styled.img<{ width: number; height: number }>`
@@ -26,7 +26,7 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
   return (
     <>
       <SearchBar onSearch={handleSearch} />
-      <Grid id="masonry-grid">
+      <Grid $columnCount={columnCount}>
         {state.columns.map((column: any, columnIndex: number) => (
           <div
             key={columnIndex}
