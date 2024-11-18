@@ -33,3 +33,18 @@ const fetchPhotosBase = async (
 const debouncedFetchPhotos = debounce(fetchPhotosBase, 300, { leading: true });
 
 export const fetchPhotos = debouncedFetchPhotos;
+
+export const fetchPhotoById = async (id: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}photos/${id}`, {
+      headers: {
+        Authorization: API_KEY || '',
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching photo:', error);
+    return null;
+  }
+};

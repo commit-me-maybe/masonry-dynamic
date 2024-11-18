@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import useFetchPhotos from '../../hooks/useFetchPhotos';
+import { Link } from 'react-router-dom';
 
 interface MasonryGridProps {
   columnCount: number;
@@ -29,14 +30,20 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
           style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
           {column.map((photo: any) => (
-            <Photo
+            <Link
+              to={`/photo-details/${photo.id}`}
               key={photo.id}
-              loading="lazy"
-              src={photo.src.medium}
-              alt={photo.photographer}
-              width={photo.width}
-              height={photo.height}
-            />
+              state={{ photo }}
+            >
+              <Photo
+                key={photo.id}
+                loading="lazy"
+                src={photo.src.medium}
+                alt={photo.photographer}
+                width={photo.width}
+                height={photo.height}
+              />
+            </Link>
           ))}
         </div>
       ))}
