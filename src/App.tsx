@@ -23,6 +23,7 @@ function App() {
 
   return (
     <div className="App">
+      {/* TODO: Remove this Profiler after testing */}
       <Profiler
         id="MasonryGrid"
         onRender={(id, phase, actualDuration) => {
