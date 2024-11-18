@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, Profiler } from 'react';
-import './App.css';
+import { useState, useEffect, useMemo, Profiler } from 'react';
 import MasonryGrid from './components/MasonryGrid/MasonryGrid';
 import { calculateColumnCount } from './utils/calculateColumnsCount';
 import { debounce } from 'lodash';
