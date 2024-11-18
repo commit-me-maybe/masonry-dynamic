@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Profiler } from 'react';
 import './App.css';
 import MasonryGrid from './components/MasonryGrid/MasonryGrid';
 import { calculateColumnCount } from './utils/calculateColumnsCount';
@@ -23,7 +23,14 @@ function App() {
 
   return (
     <div className="App">
-      <MasonryGrid columnCount={columnCount} />
+      <Profiler
+        id="MasonryGrid"
+        onRender={(id, phase, actualDuration) => {
+          console.log(`${id} - ${phase} - ${actualDuration}`);
+        }}
+      >
+        <MasonryGrid columnCount={columnCount} />
+      </Profiler>
     </div>
   );
 }
