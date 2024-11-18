@@ -12,7 +12,7 @@ const SearchContainer = styled.div`
 
 const SearchInput = styled.input`
   width: 100%;
-  max-width: 400px;
+  max-width: min(400px, calc(100% - 64px));
   padding: 8px 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
