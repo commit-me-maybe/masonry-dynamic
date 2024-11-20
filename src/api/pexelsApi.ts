@@ -15,6 +15,7 @@ const fetchPhotosBase = async (
         headers: {
           Authorization: API_KEY || '',
         },
+        mode: 'cors',
       }
     );
 
@@ -40,6 +41,7 @@ export const fetchPhotoById = async (id: string) => {
       headers: {
         Authorization: API_KEY || '',
       },
+      mode: 'cors',
     });
     const data = await response.json();
     return data;
@@ -57,8 +59,9 @@ export const searchPhotos = async (query: string, perPage: number = 50) => {
       )}&per_page=${perPage}`,
       {
         headers: {
-          Authorization: `${API_KEY}`,
+          Authorization: API_KEY || '',
         },
+        mode: 'cors',
       }
     );
     if (!response.ok) {
