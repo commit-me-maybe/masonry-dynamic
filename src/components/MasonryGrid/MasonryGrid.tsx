@@ -38,6 +38,7 @@ const PhotoWrapper = styled.div.attrs<{ $top: number }>((props) => ({
   padding: 0;
   box-sizing: border-box;
   background-color: #f0f0f0;
+  border-radius: 12px;
 `;
 
 const Photo = styled.img<{ width: number; height: number }>`
