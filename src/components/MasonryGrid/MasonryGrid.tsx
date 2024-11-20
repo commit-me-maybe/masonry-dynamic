@@ -68,9 +68,20 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
       });
     };
 
-    window.addEventListener('scroll', checkVisibility);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          checkVisibility();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
     checkVisibility();
-    return () => window.removeEventListener('scroll', checkVisibility);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
