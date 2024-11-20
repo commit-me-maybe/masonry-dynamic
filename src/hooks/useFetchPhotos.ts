@@ -10,6 +10,59 @@ interface MasonryState {
   isLoading: boolean;
 }
 
+const GAP = 16;
+const COLUMN_PADDING = 12;
+const PHOTOS_PER_PAGE = 50;
+
+const calculateLayoutDimensions = (columnCount: number) => {
+  const totalWidth = window.innerWidth - COLUMN_PADDING * 2;
+  const columnWidth = totalWidth / columnCount - COLUMN_PADDING * 2;
+  return { totalWidth, columnWidth };
+};
+
+const calculatePhotoPosition = (
+  columnHeight: number,
+  isFirstInColumn: boolean,
+  photoHeight: number
+) => {
+  const currentPosition = columnHeight + (isFirstInColumn ? 0 : GAP);
+  return { currentPosition, newHeight: currentPosition + photoHeight };
+};
+
+const distributePhotos = (
+  photos: Photo[],
+  columnCount: number,
+  initialState: MasonryState
+) => {
+  const newColumns = [...initialState.columns.map((column) => [...column])];
+  const newColumnHeights = [...initialState.columnHeights];
+  const newPhotoPositions = [
+    ...initialState.photoPositions.map((pos) => [...pos]),
+  ];
+  const { columnWidth } = calculateLayoutDimensions(columnCount);
+
+  photos?.forEach((photo: Photo) => {
+    const shortestColumnIndex = newColumnHeights.indexOf(
+      Math.min(...newColumnHeights)
+    );
+    const photoHeight = Math.round((photo.height / photo.width) * columnWidth);
+
+    newColumns[shortestColumnIndex].push(photo);
+
+    const isFirstInColumn = newColumns[shortestColumnIndex].length === 1;
+    const { currentPosition, newHeight } = calculatePhotoPosition(
+      newColumnHeights[shortestColumnIndex],
+      isFirstInColumn,
+      photoHeight
+    );
+
+    newPhotoPositions[shortestColumnIndex].push(currentPosition);
+    newColumnHeights[shortestColumnIndex] = newHeight;
+  });
+
+  return { newColumns, newColumnHeights, newPhotoPositions };
+};
+
 const useFetchPhotos = (columnCount: number) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [state, setState] = useState<MasonryState>(() => ({
@@ -23,46 +76,17 @@ const useFetchPhotos = (columnCount: number) => {
   const loading = useRef(false);
 
   const loadMorePhotos = useCallback(async () => {
-    if (loading.current) return;
+    // TODO: Handle search query better
+    // Currently API doesn't support search query in pagination.
+    if (loading.current || searchQuery) return;
     loading.current = true;
 
     try {
-      const newPhotos = searchQuery
-        ? await searchPhotos(searchQuery)
-        : await fetchPhotos(page.current, 50);
+      const newPhotos = await fetchPhotos(page.current, PHOTOS_PER_PAGE);
+      if (!newPhotos) return;
 
-      const newColumns = [...state.columns.map((column) => [...column])];
-      const newColumnHeights = [...state.columnHeights];
-      const newPhotoPositions = [
-        ...state.photoPositions.map((positions) => [...positions]),
-      ];
-
-      const GAP = 16;
-      const COLUMN_PADDING = 12;
-      // Calculate actual available width for images
-      const totalWidth = window.innerWidth - COLUMN_PADDING * 2; // Account for grid padding
-      const columnWidth = totalWidth / columnCount - COLUMN_PADDING * 2; // Account for column padding
-
-      newPhotos?.forEach((photo: Photo) => {
-        const shortestColumnIndex = newColumnHeights.indexOf(
-          Math.min(...newColumnHeights)
-        );
-
-        // Calculate photo height based on the actual available width
-        const photoHeight = Math.round(
-          (photo.height / photo.width) * columnWidth
-        );
-
-        newColumns[shortestColumnIndex].push(photo);
-
-        // For first photo in column, don't add gap
-        const isFirstInColumn = newColumns[shortestColumnIndex].length === 1;
-        const currentPosition =
-          newColumnHeights[shortestColumnIndex] + (isFirstInColumn ? 0 : GAP);
-
-        newPhotoPositions[shortestColumnIndex].push(currentPosition);
-        newColumnHeights[shortestColumnIndex] = currentPosition + photoHeight;
-      });
+      const { newColumns, newColumnHeights, newPhotoPositions } =
+        distributePhotos(newPhotos, columnCount, state);
 
       setState(
         produce(state, (draft) => {
@@ -82,51 +106,31 @@ const useFetchPhotos = (columnCount: number) => {
     async (query: string) => {
       setSearchQuery(query);
       page.current = 1;
-      setState({
+
+      const initialState: MasonryState = {
         columns: Array.from({ length: columnCount }, () => []),
         columnHeights: new Array(columnCount).fill(0),
         photoPositions: Array.from({ length: columnCount }, () => []),
         isLoading: false,
-      });
+      };
 
-      if (query) {
-        const searchResults = await searchPhotos(query);
-        if (searchResults) {
-          const newColumns = Array.from({ length: columnCount }, () => []);
-          const newColumnHeights = new Array(columnCount).fill(0);
-          const newPhotoPositions = Array.from(
-            { length: columnCount },
-            () => []
-          );
+      setState(initialState);
 
-          searchResults.forEach((photo: Photo) => {
-            const shortestColumnIndex = newColumnHeights.indexOf(
-              Math.min(...newColumnHeights)
-            );
+      const photos = await searchPhotos(query, PHOTOS_PER_PAGE);
+      if (!photos) return;
 
-            const photoHeight =
-              (photo.height / photo.width) * (window.innerWidth / columnCount);
-            const gap = 16;
+      const { newColumns, newColumnHeights, newPhotoPositions } =
+        distributePhotos(photos, columnCount, initialState);
 
-            (newColumns[shortestColumnIndex] as Photo[]).push(photo);
-            (newPhotoPositions[shortestColumnIndex] as number[]).push(
-              newColumnHeights[shortestColumnIndex]
-            );
-            newColumnHeights[shortestColumnIndex] += photoHeight + gap;
-          });
-
-          setState({
-            columns: newColumns,
-            columnHeights: newColumnHeights,
-            photoPositions: newPhotoPositions,
-            isLoading: false,
-          });
-        }
-      } else {
-        loadMorePhotos();
-      }
+      setState(
+        produce(state, (draft) => {
+          draft.columns = newColumns;
+          draft.columnHeights = newColumnHeights;
+          draft.photoPositions = newPhotoPositions;
+        })
+      );
     },
-    [columnCount, loadMorePhotos]
+    [columnCount, state]
   );
 
   useEffect(() => {

@@ -22,15 +22,15 @@ function App() {
 
   return (
     <div className="App">
-      {/* TODO: Remove this Profiler after testing */}
-      <Profiler
+      {/* TODO: Use for debugging */}
+      {/* <Profiler
         id="MasonryGrid"
         onRender={(id, phase, actualDuration) => {
           console.log(`${id} - ${phase} - ${actualDuration}`);
         }}
-      >
-        <MasonryGrid columnCount={columnCount} />
-      </Profiler>
+      > */}
+      <MasonryGrid columnCount={columnCount} />
+      {/* </Profiler> */}
     </div>
   );
 }

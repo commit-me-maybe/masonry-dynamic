@@ -13,6 +13,11 @@ const Grid = styled.div<{ $columnCount: number }>`
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
+  padding: 0 12px;
+
+  @media (max-width: 768px) {
+    padding: 0 8px;
+  }
 `;
 
 const Column = styled.div<{
@@ -23,7 +28,7 @@ const Column = styled.div<{
   position: absolute;
   width: ${(props) => `calc(100% / ${props.$columnCount} - 24px)`};
   left: ${(props) => `${(props.$index * 100) / props.$columnCount}%`};
-  padding: 0 24px;
+  padding: 0 16px;
   box-sizing: border-box;
   height: ${(props) => `${props.$height}px`};
 `;
@@ -37,14 +42,17 @@ const PhotoWrapper = styled.div.attrs<{ $top: number }>((props) => ({
   width: 100%;
   padding: 0;
   box-sizing: border-box;
-  background-color: #f0f0f0;
-  border-radius: 12px;
+  border-radius: 8px;
+
+  @media (max-width: 768px) {
+    border-radius: 6px;
+  }
 `;
 
 const Photo = styled.img<{ width: number; height: number }>`
   width: 100%;
   height: auto;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: transform 0.2s ease;
   display: block;
 
@@ -54,8 +62,8 @@ const Photo = styled.img<{ width: number; height: number }>`
 `;
 
 const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
-  const { state, handleSearch } = useFetchPhotos(columnCount);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 0 });
+  const { state, handleSearch } = useFetchPhotos(columnCount);
 
   useEffect(() => {
     const checkVisibility = () => {
@@ -107,7 +115,8 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
 
                 return (
                   isVisible && (
-                    <PhotoWrapper $top={top}>
+                    // TODO: make key's unique
+                    <PhotoWrapper $top={top} key={photo.id}>
                       <Link to={`/photo-details/${photo.id}`} state={{ photo }}>
                         <Photo
                           loading="lazy"
