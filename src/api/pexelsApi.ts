@@ -49,7 +49,7 @@ export const fetchPhotoById = async (id: string) => {
   }
 };
 
-export const searchPhotos = async (query: string, perPage: number = 40) => {
+export const searchPhotos = async (query: string, perPage: number = 50) => {
   try {
     const response = await fetch(
       `${BASE_URL}search?query=${encodeURIComponent(
