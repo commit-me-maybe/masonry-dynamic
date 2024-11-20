@@ -61,7 +61,7 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
     const checkVisibility = () => {
       const scrollTop = window.scrollY;
       const viewportHeight = window.innerHeight;
-      const buffer = viewportHeight * 2;
+      const buffer = viewportHeight * 4;
 
       setVisibleRange({
         start: Math.max(0, scrollTop - buffer),
@@ -106,8 +106,8 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
                   top >= visibleRange.start && top <= visibleRange.end;
 
                 return (
-                  <PhotoWrapper key={photo.id} $top={top}>
-                    {isVisible && (
+                  isVisible && (
+                    <PhotoWrapper $top={top}>
                       <Link to={`/photo-details/${photo.id}`} state={{ photo }}>
                         <Photo
                           loading="lazy"
@@ -117,8 +117,8 @@ const VirtualizedGrid = ({ columnCount }: MasonryGridProps) => {
                           height={photo.height}
                         />
                       </Link>
-                    )}
-                  </PhotoWrapper>
+                    </PhotoWrapper>
+                  )
                 );
               })}
             </Column>
